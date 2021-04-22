@@ -11,39 +11,6 @@ sweetSixteen = set([18, 19, 20, 21, 26, 27, 28, 29,
 format = [10*i+j for i in range(1, 9) for j in range(1, 9)]
 
 
-class Strategy():
-    def best_strategy(self, board, player, best_move, still_running):
-        adjustedBoard = ''.join(board).replace("?", "").upper()
-        adjustedBoard = list(adjustedBoard.replace("@", "X"))
-
-        if player == '@':
-            player = 'X'
-        else:
-            player = player.upper()
-
-        print(player)
-        retTup = getMoves(adjustedBoard, player)
-        posMoves, toFlip = retTup[0], retTup[1]
-
-        # heuristic
-        tempPos = posMoves[:]
-        result = optimize(adjustedBoard, tempPos, toFlip, player)
-        if result != -1:
-            best_move.value = format[result]
-        else:
-            posMoves = set(posMoves)
-            intersectionSet = posMoves & sweetSixteen
-            if intersectionSet:
-                best_move.value = format[random.choice(list(intersectionSet))]
-            else:
-                best_move.value = format[random.choice(posMoves)]
-
-        # negamax
-        if adjustedBoard.count('.') <= 14:
-            best_move.value = format[negamaxTerminal(
-                adjustedBoard, player, -65, 65)[-1]]
-
-
 def optimize(board, posMoves, toFlip, turn):
     if len(posMoves) == 1:
         return posMoves[0]
@@ -135,7 +102,7 @@ def validMove(board, index, turn):
                     break
             if not onBoard(index, tempIndex) or board[tempIndex] == other:
                 continue
-            #print(str(index) + " " + str(tempIndex), col)
+            # print(str(index) + " " + str(tempIndex), col)
             if board[tempIndex] == turn:
                 while True:
                     tempIndex -= num
@@ -217,9 +184,10 @@ def negamaxTerminal(board, token, improvable, hardBound):
 
 def display(board):
     boardString = ''.join(board)
+    print('  12345678')
     for i in range(0, 64, 8):
-        print(boardString[i:i+8])
-    #print("X : O = " + str(boardString.count('X')) + " : " + str(boardString.count('O')))
+        print(str(i // 8 + 1) + ' ' + boardString[i:i+8])
+    # print("X : O = " + str(boardString.count('X')) + " : " + str(boardString.count('O')))
 
 
 def opposite(turn):
@@ -242,37 +210,72 @@ def getPos(pos):
 
 if __name__ == '__main__':
     # decipher input
-    board = list(sys.argv[1].upper())
-    curTurn = sys.argv[2].upper()
+    board = '...........................OX......XO...........................'
+    playerTurn = True
+    print("The player goes first with O!")
 
-    # display board
-    display(board)
-    print("")
+    while board.count(".") > 0:
+        display(board)
+        print()
+        if playerTurn:
+            curTurn = "O"
+            # print possible moves
+            retTup = getMoves(board, curTurn)
+            posMoves, toFlip = retTup[0], retTup[1]
+            if len(posMoves) == 0:
+                print("There are no possible moves")
+            else:
+                posMovesOutput = [(val // 8 + 1, val % 8 + 1)
+                                  for val in posMoves]
+                print('Possible Moves: {}'.format(posMovesOutput))
 
-    # print possible moves
-    retTup = getMoves(board, curTurn)
-    posMoves, toFlip = retTup[0], retTup[1]
-    if len(posMoves) == 0:
-        print("There are no possible moves")
-    else:
-        print('Possible Moves: {}'.format(posMoves))
+            # user inputs
+            playerTurnInput = input(
+                "State your move in this format -> row and col number seperated by comma (e.g 1,1): ")
+            playerRow, playerCol = int(playerTurn.split(
+                ',')[0]) - 1, int(playerTurn.split(',')[1]) - 1
 
-    # preferred move by heuristic
-    tempPos = posMoves[:]
-    result = optimize(board, tempPos, toFlip, curTurn)
-    if result != -1:
-        print("My heuristic choice is {}".format(result))
-    else:
-        posMoves = set(posMoves)
-        intersectionSet = posMoves & sweetSixteen
-        if intersectionSet:
-            print("My heuristic choice is {}".format(
-                random.choice(list(intersectionSet))))
+            # update the board
+            playerPosition = playerRow * 8 + playerCol
+            # board[playerPosition] = "O"  # ???? or is it X
+            makeMove(board, "O", posMoves.index(playerPosition), toFlip)
+            playerTurn = False
         else:
-            print("My heuristic choice is {}".format(random.choice(posMoves)))
+            curTurn = "X"
+            # print possible moves
+            retTup = getMoves(board, curTurn)
+            posMoves, toFlip = retTup[0], retTup[1]
+            if len(posMoves) == 0:
+                print("There are no possible moves")
+            else:
+                posMovesOutput = [(val // 8 + 1, val % 8 + 1)
+                                  for val in posMoves]
+                print('Possible Moves: {}'.format(posMovesOutput))
 
-    neg = None
-    # negamax
-    if board.count('.') <= 14:
-        neg = negamaxTerminal(board, curTurn, -65, 65)
-        print('Negamax score {} and I choose move {}'.format(neg, neg[-1]))
+            # preferred move by heuristic
+            tempPos = posMoves[:]
+            result = optimize(board, tempPos, toFlip, curTurn)
+
+            boardChoice = None
+            if result != -1:
+                print("My heuristic choice is ",
+                      (result // 8 + 1, result % 8 + 1))
+                boardChoice = result
+            else:
+                posMoves = set(posMoves)
+                intersectionSet = posMoves & sweetSixteen
+                if intersectionSet:
+                    boardChoice = random.choice(list(intersectionSet))
+                else:
+                    boardChoice = random.choice(posMoves)
+                print("My heuristic choice is ", boardChoice)
+            neg = None
+            # negamax
+            if board.count('.') <= 14:
+                neg = negamaxTerminal(board, curTurn, -65, 65)
+                print('Negamax score {} and I choose move {}'.format(
+                    neg, neg[-1]))
+                boardChoice = neg[-1]
+            # update our move to board
+            board[boardChoice] = "X"
+            playerTurn = True

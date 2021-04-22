@@ -210,15 +210,15 @@ def getPos(pos):
 
 if __name__ == '__main__':
     # decipher input
-    board = '...........................OX......XO...........................'
-    playerTurn = True
-    print("The player goes first with O!")
+    board = list(
+        '...........................OX......XO...........................')
+    curTurn = 'O'
+    print('The player starts with O \n')
 
     while board.count(".") > 0:
         display(board)
         print()
-        if playerTurn:
-            curTurn = "O"
+        if curTurn == 'O':
             # print possible moves
             retTup = getMoves(board, curTurn)
             posMoves, toFlip = retTup[0], retTup[1]
@@ -232,25 +232,20 @@ if __name__ == '__main__':
             # user inputs
             playerTurnInput = input(
                 "State your move in this format -> row and col number seperated by comma (e.g 1,1): ")
-            playerRow, playerCol = int(playerTurn.split(
-                ',')[0]) - 1, int(playerTurn.split(',')[1]) - 1
+            playerRow, playerCol = int(playerTurnInput.split(
+                ',')[0]) - 1, int(playerTurnInput.split(',')[1]) - 1
+
+            # get the position in 1D
+            playerPosition = playerRow * 8 + playerCol
 
             # update the board
-            playerPosition = playerRow * 8 + playerCol
-            # board[playerPosition] = "O"  # ???? or is it X
-            makeMove(board, "O", posMoves.index(playerPosition), toFlip)
-            playerTurn = False
+            board = makeMove(board, curTurn, playerPosition, toFlip)
         else:
-            curTurn = "X"
             # print possible moves
             retTup = getMoves(board, curTurn)
             posMoves, toFlip = retTup[0], retTup[1]
             if len(posMoves) == 0:
-                print("There are no possible moves")
-            else:
-                posMovesOutput = [(val // 8 + 1, val % 8 + 1)
-                                  for val in posMoves]
-                print('Possible Moves: {}'.format(posMovesOutput))
+                continue
 
             # preferred move by heuristic
             tempPos = posMoves[:]
@@ -269,6 +264,7 @@ if __name__ == '__main__':
                 else:
                     boardChoice = random.choice(posMoves)
                 print("My heuristic choice is ", boardChoice)
+
             neg = None
             # negamax
             if board.count('.') <= 14:
@@ -277,5 +273,19 @@ if __name__ == '__main__':
                     neg, neg[-1]))
                 boardChoice = neg[-1]
             # update our move to board
-            board[boardChoice] = "X"
-            playerTurn = True
+            board = makeMove(board, curTurn, boardChoice, toFlip)
+
+        curTurn = opposite(curTurn)
+
+    print('\nFinal Board\n')
+    display(board)
+    Os, Xs = board.count('O'), board.count('X')
+    print('\nFinal Score\n')
+    print('O: {0}, X: {1}\n'.format(Os, Xs))
+
+    if Os > Xs:
+        print('You win!')
+    elif Os < Xs:
+        print('BOthello wins!')
+    else:
+        print('Tie Game!')

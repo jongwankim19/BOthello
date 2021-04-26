@@ -1,5 +1,3 @@
-#!/python3
-# Jongwan Kim Period 3
 import sys
 import random
 
@@ -8,13 +6,13 @@ directions = [-9, -8, -7, -1, 1, 7, 8, 9]
 cx = {0: [1, 8, 9], 7: [6, 14, 15], 56: [48, 49, 57], 63: [54, 55, 62]}
 sweetSixteen = set([18, 19, 20, 21, 26, 27, 28, 29,
                     34, 35, 36, 37, 42, 43, 44, 45])
-format = [10*i+j for i in range(1, 9) for j in range(1, 9)]
 
 
 def optimize(board, posMoves, toFlip, turn):
     if len(posMoves) == 1:
         return posMoves[0]
     good = set()
+
     # first optimization
     for n in [0, 7, 56, 63]:
         if n in posMoves:
@@ -276,6 +274,9 @@ if __name__ == '__main__':
             board = makeMove(board, curTurn, boardChoice, toFlip)
 
         curTurn = opposite(curTurn)
+
+        print('\nCurrent Score')
+        print('O: {0}, X: {1}\n'.format(board.count('O'), board.count('X')))
 
     print('\nFinal Board\n')
     display(board)

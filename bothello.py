@@ -158,6 +158,7 @@ def negamaxTerminal(board, token, improvable, hardBound):
     retTup = getMoves(board, token)
     lm, flip = retTup[0], retTup[1]
     enemy = opposite(token)
+
     if not lm:
         retTup2 = getMoves(board, enemy)
         lm2, flip2 = retTup2[0], retTup2[1]
@@ -165,11 +166,44 @@ def negamaxTerminal(board, token, improvable, hardBound):
             return [evalBoard(board, token), -3]  # -3 means game over
         nm = negamaxTerminal(board, enemy, -hardBound, -improvable) + [-1]
         return [-nm[0]] + nm[1:]
+
     best = []
     newHB = -improvable
     for mv in lm:
         nm = negamaxTerminal(makeMove(board, token, mv, flip),
                              enemy, -hardBound, newHB) + [mv]
+        if not best or nm[0] < newHB:
+            best = nm
+            if nm[0] < newHB:
+                newHB = nm[0]
+                # pruning
+                if -newHB >= hardBound:
+                    return [-best[0]] + best[1:]
+    return [-best[0]] + best[1:]
+
+
+def negamaxTerminalBounded(board, token, improvable, hardBound, k):
+    retTup = getMoves(board, token)
+    lm, flip = retTup[0], retTup[1]
+    enemy = opposite(token)
+
+    if k == 0:
+        return [evalBoard(board, token), -4]
+
+    if not lm:
+        retTup2 = getMoves(board, enemy)
+        lm2, flip2 = retTup2[0], retTup2[1]
+        if not lm2:
+            return [evalBoard(board, token), -3]  # -3 means game over
+        nm = negamaxTerminalBounded(
+            board, enemy, -hardBound, -improvable, k - 1) + [-1]
+        return [-nm[0]] + nm[1:]
+    best = []
+    newHB = -improvable
+    for mv in lm:
+        nm = negamaxTerminalBounded(makeMove(board, token, mv, flip),
+                                    enemy, -hardBound, newHB, k - 1) + [mv]
+        #print(token, nm)
         if not best or nm[0] < newHB:
             best = nm
             if nm[0] < newHB:
@@ -207,7 +241,10 @@ def getPos(pos):
 
 
 if __name__ == '__main__':
-    # decipher input
+    k, bounded = 14, False
+    if len(sys.argv) == 3:
+        k = int(sys.argv[1])
+        bounded = sys.argv[2].lower() == 'b'
     board = list(
         '...........................OX......XO...........................')
     curTurn = 'O'
@@ -216,6 +253,12 @@ if __name__ == '__main__':
     while board.count(".") > 0:
         display(board)
         print()
+
+        humanMove = getMoves(board, curTurn)[0]
+        bothelloMove = getMoves(board, opposite(curTurn))[0]
+        if len(humanMove) == 0 and len(bothelloMove) == 0:
+            break
+
         if curTurn == 'O':
             # print possible moves
             retTup = getMoves(board, curTurn)
@@ -227,51 +270,57 @@ if __name__ == '__main__':
                                   for val in posMoves]
                 print('Possible Moves: {}'.format(posMovesOutput))
 
-            # user inputs
-            playerTurnInput = input(
-                "State your move in this format -> row and col number seperated by comma (e.g 1,1): ")
-            playerRow, playerCol = int(playerTurnInput.split(
-                ',')[0]) - 1, int(playerTurnInput.split(',')[1]) - 1
+                # user inputs
+                playerTurnInput = input(
+                    "State your move in this format -> row and col number seperated by comma (e.g 1,1): ")
+                playerRow, playerCol = int(playerTurnInput.split(
+                    ',')[0]) - 1, int(playerTurnInput.split(',')[1]) - 1
 
-            # get the position in 1D
-            playerPosition = playerRow * 8 + playerCol
+                # get the position in 1D
+                playerPosition = playerRow * 8 + playerCol
 
-            # update the board
-            board = makeMove(board, curTurn, playerPosition, toFlip)
+                # update the board
+                board = makeMove(board, curTurn, playerPosition, toFlip)
         else:
+            boardChoice = None
+
             # print possible moves
             retTup = getMoves(board, curTurn)
             posMoves, toFlip = retTup[0], retTup[1]
-            if len(posMoves) == 0:
-                continue
 
-            # preferred move by heuristic
-            tempPos = posMoves[:]
-            result = optimize(board, tempPos, toFlip, curTurn)
+            if len(posMoves) > 0:
+                if not bounded:
+                    # preferred move by heuristic
+                    tempPos = posMoves[:]
+                    result = optimize(board, tempPos, toFlip, curTurn)
 
-            boardChoice = None
-            if result != -1:
-                print("My heuristic choice is ",
-                      (result // 8 + 1, result % 8 + 1))
-                boardChoice = result
-            else:
-                posMoves = set(posMoves)
-                intersectionSet = posMoves & sweetSixteen
-                if intersectionSet:
-                    boardChoice = random.choice(list(intersectionSet))
+                    if result != -1:
+                        boardChoice = result
+                    else:
+                        posMoves = set(posMoves)
+                        intersectionSet = posMoves & sweetSixteen
+                        if intersectionSet:
+                            boardChoice = random.choice(list(intersectionSet))
+                        else:
+                            boardChoice = random.choice(posMoves)
+
+                    print("My heuristic choice is ",
+                          (boardChoice // 8 + 1, boardChoice % 8 + 1))
+
+                    neg = None
+                    # negamax
+                    if board.count('.') <= k:
+                        neg = negamaxTerminal(board, curTurn, -65, 65)
+                        print('Negamax score {} and I choose move ({}, {})'.format(
+                            neg, neg[-1] // 8 + 1, neg[-1] % 8 + 1))
+                        boardChoice = neg[-1]
                 else:
-                    boardChoice = random.choice(posMoves)
-                print("My heuristic choice is ", boardChoice)
+                    neg = negamaxTerminalBounded(board, curTurn, -65, 65, k)
+                    print('Negamax score {} and I choose move ({}, {})'.format(
+                        neg, neg[-1] // 8 + 1, neg[-1] % 8 + 1))
+                    boardChoice = neg[-1]
 
-            neg = None
-            # negamax
-            if board.count('.') <= 14:
-                neg = negamaxTerminal(board, curTurn, -65, 65)
-                print('Negamax score {} and I choose move {}'.format(
-                    neg, neg[-1]))
-                boardChoice = neg[-1]
-            # update our move to board
-            board = makeMove(board, curTurn, boardChoice, toFlip)
+                board = makeMove(board, curTurn, boardChoice, toFlip)
 
         curTurn = opposite(curTurn)
 

@@ -254,13 +254,13 @@ if __name__ == '__main__':
         display(board)
         print()
 
-        humanMove = getMoves(board, curTurn)[0]
-        bothelloMove = getMoves(board, opposite(curTurn))[0]
-        if len(humanMove) == 0 and len(bothelloMove) == 0:
+        move1 = getMoves(board, curTurn)[0]
+        move2 = getMoves(board, opposite(curTurn))[0]
+        if len(move1) == 0 and len(move2) == 0:
             break
 
         if curTurn == 'O':
-            # print possible moves
+            # get possible moves
             retTup = getMoves(board, curTurn)
             posMoves, toFlip = retTup[0], retTup[1]
             if len(posMoves) == 0:

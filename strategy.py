@@ -4,6 +4,7 @@ import random
 class Strategy():
     def __init__(self, turn, k):
         self.k = k
+        # print("self k: ", self.k)
         self.turn = turn
         self.numList = [str(i) for i in range(0, 64)]
         self.directions = [-9, -8, -7, -1, 1, 7, 8, 9]
@@ -99,7 +100,7 @@ class Strategy():
         retTup = self.getMoves(board, token)
         lm, flip = retTup[0], retTup[1]
         enemy = self.opposite(token)
-
+        # print("k: ", k)
         if k <= 0:
             return [self.evalBoard(board, token), -4]
 

@@ -197,7 +197,6 @@ class HeuristicStrategy():
         retTup = self.getMoves(board, token)
         lm, flip = retTup[0], retTup[1]
         enemy = self.opposite(token)
-        # print("k: ", k)
         if k <= 0:
             return [self.evalBoard(board, token), -4]
 
@@ -214,7 +213,7 @@ class HeuristicStrategy():
         for mv in lm:
             nm = self.negamaxTerminalBounded(self.makeMove(board, token, mv, flip),
                                              enemy, -hardBound, newHB, k - 1) + [mv]
-            #print(token, nm)
+
             if not best or nm[0] < newHB:
                 best = nm
                 if nm[0] < newHB:
@@ -224,7 +223,7 @@ class HeuristicStrategy():
                         return [-best[0]] + best[1:]
         return [-best[0]] + best[1:]
 
-    def play(self, board):
+    def play(self, board, bounded):
   
         boardChoice = None
 
@@ -233,8 +232,6 @@ class HeuristicStrategy():
         posMoves, toFlip = retTup[0], retTup[1]
 
         if len(posMoves) > 0:
-            print(1)
-            print("not :" ,bounded != 'b')
             if bounded != 'b':
                 print(2)
                 # preferred move by heuristic

@@ -60,7 +60,5 @@ if __name__ == '__main__':
     elif Os < Xs:
         if not bounded:
             print('Player 2 (heuristic) wins!')
-        else:
-            print('Player 2 (heuristic, k = {}) wins!'.format(k2))
     else:
         print('Tie Game!')

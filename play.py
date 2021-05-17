@@ -26,8 +26,14 @@ if __name__ == '__main__':
         display(board)
         print()
 
-        move1 = player1.getMoves(board, curTurn)[0]
-        move2 = player2.getMoves(board, opposite(curTurn))[0]
+        move1, move2 = None, None
+        if curTurn == 'O':
+            move1 = player1.getMoves(board, curTurn)[0]
+            move2 = player2.getMoves(board, opposite(curTurn))[0]
+        else:
+            move1 = player1.getMoves(board, opposite(curTurn))[0]
+            move2 = player2.getMoves(board, curTurn)[0]
+
         if len(move1) == 0 and len(move2) == 0:
             break
 

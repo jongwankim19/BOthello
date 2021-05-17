@@ -6,3 +6,4 @@
 - `python bothello.py k`: runs Human vs. AI game where the AI is a combination of heuristics and minimax. The AI uses minimax when there are no more than `k` empty spaces left.
 - `python bothello.py k b`: runs Human vs. AI game where the AI is a `k`-bounded minimax.
 - `python play.py k1 k2`: runs AI vs. AI game where the first AI is `k1`-bounded minimax and the second AI is `k2`-bounded minimax.
+- `python heuristicPlay.py k1 k2`: runs Heuristic vs. AI game where the first heuristic runs minimax with no more than `k1` spaces left and the AI is `k2`-bounded minimax.

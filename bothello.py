@@ -242,8 +242,9 @@ def getPos(pos):
 
 if __name__ == '__main__':
     k, bounded = 14, False
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 2:
         k = int(sys.argv[1])
+    if len(sys.argv) == 3:
         bounded = sys.argv[2].lower() == 'b'
     board = list(
         '...........................OX......XO...........................')
